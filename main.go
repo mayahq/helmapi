@@ -26,4 +26,8 @@ func main() {
 	if err != nil {
 		log.Fatal("Error starting server:", err)
 	}
+
+	// output, _ := client.GetInstallRequestFromRuntimeId("testid")
+	// output, _ := client.GetDeleteRequestFromRuntimeId("testid")
+	// fmt.Println(output)
 }

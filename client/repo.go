@@ -78,7 +78,7 @@ func (rr *RepoRemoveRequest) Execute() error {
 	args = append(args, rr.Repos...)
 
 	if len(rr.Repos) == 0 {
-		return fmt.Errorf("You cannot provide empty repo list")
+		return fmt.Errorf("you cannot provide empty repo list")
 	}
 
 	log.Println("Removing repos:")

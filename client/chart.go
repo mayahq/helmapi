@@ -66,12 +66,12 @@ func (ir *InstallRequest) Execute() error {
 
 	// Checking release name is not empty
 	if len(ir.ReleaseName) == 0 {
-		return fmt.Errorf("You cannot provide an empty release name")
+		return fmt.Errorf("you cannot provide an empty release name")
 	}
 
 	// Checking Chart name is not empty
 	if len(ir.ChartName) == 0 {
-		return fmt.Errorf("You cannot provide an empty chart name")
+		return fmt.Errorf("you cannot provide an empty chart name")
 	}
 
 	flags := ir.Flags
@@ -113,7 +113,7 @@ func (dr *DeleteRequest) Execute() error {
 	app := "helm"
 
 	if len(dr.ReleaseName) == 0 {
-		return fmt.Errorf("You cannot provide an empty release name")
+		return fmt.Errorf("you cannot provide an empty release name")
 	}
 
 	log.Println("Uninstalling release:")
