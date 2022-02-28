@@ -5,6 +5,9 @@ import (
 	"encoding/json"
 	"fmt"
 	"os/exec"
+	"strconv"
+	"strings"
+	"time"
 )
 
 func getChartInfoFromRuntimeId(runtimeId string) (map[string]interface{}, error) {
@@ -61,4 +64,52 @@ func GetDeleteRequestFromRuntimeId(runtimeId string) (DeleteRequest, error) {
 	dr.ReleaseName = "rt-" + runtimeId
 
 	return dr, nil
+}
+
+func RestartRuntime(runtimeId string, timeout string) error {
+	values, err := getChartInfoFromRuntimeId(runtimeId)
+	if err != nil {
+		return err
+	}
+	fmt.Println(values)
+	privateChartsRepo := values["privateChartsRepo"].(string)
+
+	// values["podAnnotations"].(map[string]interface{})["checksum"] = time.Now().Unix()
+	serialisedValues := serializeValues("", values)
+
+	app := "helm"
+	args := []string{
+		"upgrade",
+		"rt-" + runtimeId,
+		"mayanr",
+		"--repo",
+		privateChartsRepo,
+		"--set",
+		strings.Join(serialisedValues, ",") + ",podAnnotations.checksum=v" + strconv.FormatInt(time.Now().Unix(), 10),
+		"--timeout",
+		timeout,
+		"--wait",
+		"-o",
+		"json",
+	}
+
+	cmd := exec.Command(app, args...)
+	var outb, errb bytes.Buffer
+	cmd.Stdout = &outb
+	cmd.Stderr = &errb
+
+	err = cmd.Run()
+	if err != nil {
+		return err
+	}
+
+	var output map[string]interface{}
+	err = json.NewDecoder(&outb).Decode(&output)
+	if err != nil {
+		return err
+	}
+
+	fmt.Println("Successfully restarted runtime", runtimeId)
+
+	return nil
 }

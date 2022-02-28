@@ -5,7 +5,9 @@ import (
 	"fmt"
 	"log"
 	"os/exec"
+	"strconv"
 	"strings"
+	"time"
 )
 
 // InstallRequest represents an install command
@@ -61,7 +63,8 @@ func (ir *InstallRequest) Execute() error {
 	args := []string{"install", ir.ReleaseName, ir.ChartName}
 
 	// Constructing the --set argument
-	values := []string{"--set", strings.Join(ir.GetValues(), ",")}
+	pac := ",podAnnotations.checksum=v" + strconv.FormatInt(time.Now().Unix(), 10)
+	values := []string{"--set", strings.Join(ir.GetValues(), ",") + pac}
 	args = append(args, values...)
 
 	// Checking release name is not empty

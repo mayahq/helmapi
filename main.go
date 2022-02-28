@@ -18,6 +18,9 @@ func main() {
 	http.Handle("/repo/delete", api.RemoveRepoHandler())
 	http.Handle("/repo/update", api.RepoUpdateHandler())
 
+	// Endpoints for runtime management
+	http.Handle("/runtime/restart", api.RestartRuntimeHandler())
+
 	// Health check endpoint
 	http.Handle("/healthcheck", api.HealthCheckHandler())
 
