@@ -20,6 +20,7 @@ func main() {
 
 	// Endpoints for runtime management
 	http.Handle("/runtime/restart", api.RestartRuntimeHandler())
+	http.Handle("/runtime/delete", api.DeleteRuntimeHandler())
 
 	// Health check endpoint
 	http.Handle("/healthcheck", api.HealthCheckHandler())
