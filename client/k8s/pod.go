@@ -119,7 +119,6 @@ func GetPodsBySelector(
 		Pods:     result,
 		Continue: pods.Continue,
 	}
-	// log.Println(pods.Items[0])
 
 	return podRes, nil
 }

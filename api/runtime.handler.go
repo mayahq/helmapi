@@ -171,7 +171,12 @@ func FetchRuntimePodsHandler() http.Handler {
 		}
 
 		ctx := context.Background()
-		selector := "userRuntimeOwner in (" + strings.Join(data.Users, ",") + "),mayaResourceType=userRuntime"
+		var selector string
+		if len(data.Users) > 0 {
+			selector = "userRuntimeOwner in (" + strings.Join(data.Users, ",") + "),mayaResourceType=userRuntime"
+		} else {
+			selector = "mayaResourceType=userRuntime"
+		}
 		pods, perr := k8s.GetPodsBySelector(ctx, data.Namespace, selector, data.Limit, data.Continue)
 
 		if perr != nil {
