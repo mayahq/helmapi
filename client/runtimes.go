@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	"log"
 	"os/exec"
 	"strconv"
 	"strings"
@@ -11,6 +12,7 @@ import (
 )
 
 func getChartInfoFromRuntimeId(runtimeId string) (map[string]interface{}, error) {
+	// log.Println("here 1", runtimeId)
 	app := "helm"
 	instanceName := "rt-" + runtimeId
 	args := []string{"get", "values", instanceName, "-o", "json"}
@@ -18,22 +20,26 @@ func getChartInfoFromRuntimeId(runtimeId string) (map[string]interface{}, error)
 	if len(runtimeId) == 0 {
 		return nil, fmt.Errorf("you cannot provide an empty runtime ID")
 	}
+	// log.Println("here 2")
 
 	cmd := exec.Command(app, args...)
 	var outb, errb bytes.Buffer
 	cmd.Stdout = &outb
 	cmd.Stderr = &errb
+	// log.Println("here 3")
 
 	err := cmd.Run()
 	if err != nil {
 		return nil, err
 	}
+	// log.Println("here 4")
 
 	var output map[string]interface{}
 	err = json.NewDecoder(&outb).Decode(&output)
 	if err != nil {
 		return nil, err
 	}
+	// log.Println("here 5")
 
 	return output, nil
 }
@@ -67,11 +73,12 @@ func GetDeleteRequestFromRuntimeId(runtimeId string) (DeleteRequest, error) {
 }
 
 func RestartRuntime(runtimeId string, timeout string) error {
+	log.Println("Attempting to restart runtime", runtimeId)
 	values, err := getChartInfoFromRuntimeId(runtimeId)
 	if err != nil {
+		log.Println("Error", runtimeId, err)
 		return err
 	}
-	fmt.Println(values)
 	privateChartsRepo := values["privateChartsRepo"].(string)
 
 	// values["podAnnotations"].(map[string]interface{})["checksum"] = time.Now().Unix()
@@ -98,18 +105,13 @@ func RestartRuntime(runtimeId string, timeout string) error {
 	cmd.Stdout = &outb
 	cmd.Stderr = &errb
 
+	log.Println("Executing command to restart runtime", runtimeId)
 	err = cmd.Run()
 	if err != nil {
 		return err
 	}
 
-	var output map[string]interface{}
-	err = json.NewDecoder(&outb).Decode(&output)
-	if err != nil {
-		return err
-	}
-
-	fmt.Println("Successfully restarted runtime", runtimeId)
+	log.Println("Successfully restarted runtime", runtimeId)
 
 	return nil
 }

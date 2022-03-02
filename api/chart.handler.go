@@ -44,7 +44,7 @@ func DeleteReleaseHandler() http.Handler {
 			return
 		}
 
-		deleteErr := dr.Execute()
+		deleteErr := dr.Execute("")
 		if deleteErr != nil {
 			log.Println(deleteErr)
 			w.WriteHeader(http.StatusInternalServerError)

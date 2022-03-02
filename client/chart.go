@@ -112,7 +112,7 @@ Release: %s
 }
 
 // Execute will uninstall the chart as specified by the DeleteRequest
-func (dr *DeleteRequest) Execute() error {
+func (dr *DeleteRequest) Execute(timeout string) error {
 	app := "helm"
 
 	if len(dr.ReleaseName) == 0 {
@@ -122,8 +122,21 @@ func (dr *DeleteRequest) Execute() error {
 	log.Println("Uninstalling release:")
 	log.Println(dr.String())
 
-	cmd := exec.Command(app, "uninstall", dr.ReleaseName)
-	if err := execute(cmd); err != nil {
+	args := []string{
+		"uninstall",
+		dr.ReleaseName,
+		"-o",
+		"json",
+	}
+
+	if len(timeout) > 0 {
+		args = append(args, "--timeout", timeout, "--wait")
+	}
+
+	cmd := exec.Command(app, args...)
+
+	err := cmd.Run()
+	if err != nil {
 		return err
 	}
 
