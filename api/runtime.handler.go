@@ -1,11 +1,14 @@
 package api
 
 import (
+	"context"
 	"encoding/json"
 	"log"
 	"net/http"
+	"strings"
 
 	"github.com/dush-t/helmapi/client"
+	"github.com/dush-t/helmapi/client/k8s"
 )
 
 func RestartRuntimeHandler() http.Handler {
@@ -148,5 +151,37 @@ func DeleteRuntimeHandler() http.Handler {
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusOK)
 		json.NewEncoder(w).Encode(payload)
+	})
+}
+
+func FetchRuntimePodsHandler() http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		log.Println("Bruh")
+		data := struct {
+			Users     []string `json:"users"`
+			Namespace string   `json:"namespace"`
+			Limit     int64    `json:"limit"`
+			Continue  string   `json:"continue"`
+		}{}
+
+		err := json.NewDecoder(r.Body).Decode(&data)
+		if err != nil {
+			log.Println(err)
+			w.WriteHeader((http.StatusBadRequest))
+			return
+		}
+
+		log.Println("bruh 2")
+		ctx := context.Background()
+		selector := "userRuntimeOwner in (" + strings.Join(data.Users, ",") + "),mayaResourceType=userRuntime"
+		pods, perr := k8s.GetPodsBySelector(ctx, data.Namespace, selector, data.Limit, data.Continue)
+
+		if perr != nil {
+			log.Println(perr)
+			w.WriteHeader(http.StatusInternalServerError)
+			return
+		}
+		w.Header().Set("Content-Type", "application/json")
+		json.NewEncoder(w).Encode(pods)
 	})
 }

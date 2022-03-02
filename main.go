@@ -21,6 +21,7 @@ func main() {
 	// Endpoints for runtime management
 	http.Handle("/runtime/restart", api.RestartRuntimeHandler())
 	http.Handle("/runtime/delete", api.DeleteRuntimeHandler())
+	http.Handle("/runtime/list-pods", api.FetchRuntimePodsHandler())
 
 	// Health check endpoint
 	http.Handle("/healthcheck", api.HealthCheckHandler())

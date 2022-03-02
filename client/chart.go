@@ -125,14 +125,12 @@ func (dr *DeleteRequest) Execute(timeout string) error {
 	args := []string{
 		"uninstall",
 		dr.ReleaseName,
-		"-o",
-		"json",
 	}
 
 	if len(timeout) > 0 {
 		args = append(args, "--timeout", timeout, "--wait")
 	}
-
+	log.Println(args)
 	cmd := exec.Command(app, args...)
 
 	err := cmd.Run()
