@@ -156,7 +156,6 @@ func DeleteRuntimeHandler() http.Handler {
 
 func FetchRuntimePodsHandler() http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		log.Println("Bruh")
 		data := struct {
 			Users     []string `json:"users"`
 			Namespace string   `json:"namespace"`
@@ -167,11 +166,10 @@ func FetchRuntimePodsHandler() http.Handler {
 		err := json.NewDecoder(r.Body).Decode(&data)
 		if err != nil {
 			log.Println(err)
-			w.WriteHeader((http.StatusBadRequest))
+			w.WriteHeader(http.StatusBadRequest)
 			return
 		}
 
-		log.Println("bruh 2")
 		ctx := context.Background()
 		selector := "userRuntimeOwner in (" + strings.Join(data.Users, ",") + "),mayaResourceType=userRuntime"
 		pods, perr := k8s.GetPodsBySelector(ctx, data.Namespace, selector, data.Limit, data.Continue)
@@ -183,5 +181,32 @@ func FetchRuntimePodsHandler() http.Handler {
 		}
 		w.Header().Set("Content-Type", "application/json")
 		json.NewEncoder(w).Encode(pods)
+	})
+}
+
+func FetchRuntimePodByNameHandler() http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		data := struct {
+			Name      string `json:"name"`
+			Namespace string `json:"namespace"`
+		}{}
+
+		err := json.NewDecoder(r.Body).Decode(&data)
+		if err != nil {
+			log.Println(err)
+			w.WriteHeader(http.StatusBadRequest)
+			return
+		}
+
+		ctx := context.Background()
+		podDetails, perr := k8s.GetPodByName(ctx, data.Namespace, data.Name)
+		if perr != nil {
+			log.Println(perr)
+			w.WriteHeader(http.StatusInternalServerError)
+			return
+		}
+
+		w.Header().Set("Content-Type", "application/json")
+		json.NewEncoder(w).Encode(podDetails)
 	})
 }

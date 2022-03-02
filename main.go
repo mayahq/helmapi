@@ -22,6 +22,7 @@ func main() {
 	http.Handle("/runtime/restart", api.RestartRuntimeHandler())
 	http.Handle("/runtime/delete", api.DeleteRuntimeHandler())
 	http.Handle("/runtime/list-pods", api.FetchRuntimePodsHandler())
+	http.Handle("/runtime/get-pod", api.FetchRuntimePodByNameHandler())
 
 	// Health check endpoint
 	http.Handle("/healthcheck", api.HealthCheckHandler())

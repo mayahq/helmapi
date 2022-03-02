@@ -6,6 +6,7 @@ import (
 	"path/filepath"
 	"strings"
 
+	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
 	typev1 "k8s.io/client-go/kubernetes/typed/core/v1"
@@ -30,6 +31,11 @@ type PodListResult struct {
 	Continue string       `json:"continue"`
 }
 
+type PodDetailsResult struct {
+	Details v1.Pod     `json:"details"`
+	Summary PodSummary `json:"summary"`
+}
+
 func convertMapToQueryString(mapToConv map[string]string) string {
 	expressions := make([]string, len(mapToConv))
 
@@ -52,6 +58,30 @@ func getClient(configLocation string) (typev1.CoreV1Interface, error) {
 		return nil, err
 	}
 	return clientset.CoreV1(), nil
+}
+
+func getSummaryFromPod(pod *v1.Pod) PodSummary {
+	meta := pod.ObjectMeta
+	spec := pod.Spec
+	status := pod.Status
+
+	var startTime metav1.Time
+	if len(status.ContainerStatuses) > 0 {
+		startTime = status.ContainerStatuses[0].State.Running.StartedAt
+	}
+
+	return PodSummary{
+		Name:      meta.Name,
+		Namespace: meta.Namespace,
+		Uid:       string(meta.UID),
+		CreatedAt: meta.CreationTimestamp,
+		OwnerId:   meta.Labels["userRuntimeOwner"],
+		Node:      spec.NodeName,
+		Status:    string(status.Phase),
+		HostIP:    status.HostIP,
+		PodIP:     status.PodIP,
+		StartTime: startTime,
+	}
 }
 
 func GetPodsBySelector(
@@ -82,27 +112,7 @@ func GetPodsBySelector(
 
 	result := make([]PodSummary, len(pods.Items))
 	for i, pod := range pods.Items {
-		meta := pod.ObjectMeta
-		spec := pod.Spec
-		status := pod.Status
-
-		var startTime metav1.Time
-		if len(status.ContainerStatuses) > 0 {
-			startTime = status.ContainerStatuses[0].State.Running.StartedAt
-		}
-
-		result[i] = PodSummary{
-			Name:      meta.Name,
-			Namespace: namespace,
-			Uid:       string(meta.UID),
-			CreatedAt: meta.CreationTimestamp,
-			OwnerId:   meta.Labels["userRuntimeOwner"],
-			Node:      spec.NodeName,
-			Status:    string(status.Phase),
-			HostIP:    status.HostIP,
-			PodIP:     status.PodIP,
-			StartTime: startTime,
-		}
+		result[i] = getSummaryFromPod(&pod)
 	}
 
 	podRes := PodListResult{
@@ -112,4 +122,24 @@ func GetPodsBySelector(
 	// log.Println(pods.Items[0])
 
 	return podRes, nil
+}
+
+func GetPodByName(ctx context.Context, namespace string, name string) (PodDetailsResult, error) {
+	kubeconfig := os.Getenv("KUBECONFIG")
+	k8sClient, err := getClient(kubeconfig)
+	if err != nil {
+		return PodDetailsResult{}, err
+	}
+
+	pod, perr := k8sClient.Pods(namespace).Get(ctx, name, metav1.GetOptions{})
+	if perr != nil {
+		return PodDetailsResult{}, perr
+	}
+
+	result := PodDetailsResult{
+		Details: *pod,
+		Summary: getSummaryFromPod(pod),
+	}
+
+	return result, nil
 }
