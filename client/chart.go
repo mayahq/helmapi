@@ -60,7 +60,7 @@ func (ir *InstallRequest) GetValues() []string {
 // Execute will install the chart as specified by the InstallRequest
 func (ir *InstallRequest) Execute() error {
 	app := "helm"
-	args := []string{"install", ir.ReleaseName, ir.ChartName}
+	args := []string{"upgrade", "-i", ir.ReleaseName, ir.ChartName}
 
 	// Constructing the --set argument
 	pac := ",podAnnotations.checksum=v" + strconv.FormatInt(time.Now().Unix(), 10)
